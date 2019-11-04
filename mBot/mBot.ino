@@ -25,6 +25,17 @@ void loop() {
     // Encountered black line
     else if(sensorState == S1_IN_S2_IN){
       move(0, 0);
+      // Function to detect color
+         // If red is detected
+         // If light blue is detected, two successive right-turns in two grids
+         // If purple is detected, two successive left-turns in two grids
+         // If green is detected, turn right
+         // If yellow is detected, U-turn in the same grid
+         // If black is detected, fire microphone
+            // If sound is detected, check frequency
+              // If frequency is between 100 and 300Hz, turn left
+              // If frequency is 3000Hz and above, turn right
+            // If no sound detected, end of maze.
     }
     else if(analogRead(A0) < 300){ // Left obstacle, turn right
       move(4, 100);
