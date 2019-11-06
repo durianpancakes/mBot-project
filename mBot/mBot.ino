@@ -25,54 +25,56 @@ void setup() {
 
 void loop() {
   int sensorState, color;
-  while(1){ // No black line encountered
-    Serial.print(analogRead(A0));
-    Serial.print("\n");
+  int n;
+  while(1){ // No black line encountered   
     sensorState = lineFinder.readSensors();
+    Serial.print("A0 = \n");
+    Serial.print(analogRead(A0));
+
     // Encountered black line
-  if(sensorState == S1_IN_S2_IN){
+    if(sensorState == S1_IN_S2_IN){
       move(0, 0);
       color = colourSensor();
-      Serial.println("action=");
-      Serial.println(color);
+      Serial.print("Action = ");
+      Serial.print(color);
       // Function to detect color
-         // If red is detected, turn left
-         if(color == 2){
-            move(3, 100);
-         }
+         
          // If green is detected, turn right
-         else if(color == 1){
+         if(color == 1){
             move(4, 100);
+            delay(950);
          }
+         
+         // If red is detected, turn left
+         else if(color == 2){
+            move(3, 100);
+            delay(950);
+         }
+         
          // If light blue is detected, two successive right-turns in two grids
          else if(color == 4){
-            while(ultrasonic_3.distanceCm() < 7){
-              move(4, 100);
-            }
+            move(4, 100);
+            delay(950);
             while(ultrasonic_3.distanceCm() > 7){
               avoid_obstacle();
             }
-            while(ultrasonic_3.distanceCm() < 7){
-              move(4, 100);
-            }
+            move(4, 100);
+            delay(950);
          }
          // If purple is detected, two successive left-turns in two grids
          else if(color == 5){
-            while(ultrasonic_3.distanceCm() < 7){
-              move(3, 100);
-            }
+            move(3, 100);
+            delay(950);
             while(ultrasonic_3.distanceCm() > 7){
               avoid_obstacle();
             }
-            while(ultrasonic_3.distanceCm() < 7){
-              move(3, 100);
-            }
+            move(3, 100);
+            delay(950);
          }
          // If yellow is detected, U-turn in the same grid
          else if(color == 3){
-            while(ultrasonic_3.distanceCm() < 7){
-              move(3, 100);
-            }
+            move(3, 100);
+            delay(1600);
          }
          // If black is detected, fire microphone
          else if(color == 0){
@@ -116,15 +118,17 @@ void move(int direction, int speed){
 }
 
 void avoid_obstacle(){
-    if(analogRead(A0) < 280){ // Left obstacle, turn right
+    if(analogRead(A0) < 450){ // Left obstacle, turn right
       move(4, 100);
     }
-    else if(analogRead(A1) < 280){ // Right obstacle, turn left
+    else if(analogRead(A1) < 350){ // Right obstacle, turn left
       move(3, 100);
     }
+    else if(ultrasonic_3.distanceCm() < 7){
+      move(0, 0);
+    }
     else{
-       motor_9.run(-1 * (50 / 100.0 * 255));
-       motor_10.run(56 / 100.0 * 255);
+      move(1, 150);
     }
 }
 
