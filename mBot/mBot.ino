@@ -28,8 +28,9 @@ void loop() {
   int n;
   while(1){ // No black line encountered   
     sensorState = lineFinder.readSensors();
-    Serial.print("A0 = \n");
-    Serial.print(analogRead(A1));
+    Serial.print("A0 = ");
+    Serial.print(analogRead(A0));
+    Serial.print("\n");
 
     // Encountered black line
     if(sensorState == S1_IN_S2_IN){
@@ -118,10 +119,10 @@ void move(int direction, int speed){
 }
 
 void avoid_obstacle(){
-    if(analogRead(A0) < 450){ // Left obstacle, turn right
+    if(analogRead(A0) < 320){ // Left obstacle, turn right
       move(4, 100);
     }
-    else if(analogRead(A1) < 260){ // Right obstacle, turn left
+    else if(analogRead(A1) < 290){ // Right obstacle, turn left
       move(3, 100);
     }
     else if(ultrasonic_3.distanceCm() < 7){
