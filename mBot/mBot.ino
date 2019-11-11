@@ -36,12 +36,13 @@ void setup() {
   pinMode(BAND_PASS, INPUT); // Band-pass filter
   baseSoundArray[0] = getAvgReading_sound(5,A2);
   baseSoundArray[1] = getAvgReading_sound(5,A3);
+  
+  int sensorState, color, sound;
+  int n;
 }
 
 void loop() {
-  int sensorState, color, sound;
-  int n;
-  while(1){ // No black line encountered   
+    // No black line encountered   
     sensorState = lineFinder.readSensors(); 
     Serial.print(analogRead(HIGH_PASS));
     Serial.print("\n");
@@ -61,6 +62,18 @@ void loop() {
          else if(color == 2){
             move(3, 100);
             delay(DCTurnWait);
+         }
+         
+         // If yellow is detected, U-turn in the same grid
+         else if(color == 3){
+            if(analogRead(LEFT_IR) < 280){
+               move(4, 100);
+               delay(DCUTurnWait);
+            }
+            else{
+               move(3, 100);
+               delay(DCUTurnWait);
+            }
          }
          
          // If light blue is detected, two successive right-turns in two grids
@@ -83,11 +96,7 @@ void loop() {
             move(3, 100);
             delay(DCTurnWait);
          }
-         // If yellow is detected, U-turn in the same grid
-         else if(color == 3){
-            move(4, 100);
-            delay(DCUTurnWait);
-         }
+         
          
          // If black is detected, fire microphone
          else if(color == 0){
@@ -114,7 +123,6 @@ void loop() {
     else{
         avoid_obstacle();
     }
-  }
 }
 
 // This function moves the mBot
