@@ -5,39 +5,45 @@
 #define LDRWait 10
 #define LDR A6
 #define RGBWait 200
-#define DCTurnWait 500
-#define DCUTurnWait 1050
+#define DCTurnWait 530
+#define DCUTurnWait 1231
 #define debug 1
 #define buzzer 8
+#define HIGH_PASS A0
+#define BAND_PASS A1
+#define LEFT_IR A2
+#define RIGHT_IR A3
 
 
-// Floats to hold colour arrays
+// Floats to hold colour and sound arrays
 float colourArray[] = {0,0,0};
 float blackArray[] = {121,116,109};
 float greyDiff[] = {547,563,488};
-float soundArray[] = {0,0,0,0};
+float soundArray[] = {0,0};
+float baseSoundArray[] = {0,0};
 
 MeRGBLed rgbled_7(7, 2);
-MeUltrasonicSensor ultrasonic_3(3);
+MeUltrasonicSensor ultrasonic_1(1);
 MeDCMotor motor_9(9);
 MeDCMotor motor_10(10);
 MeLineFollower lineFinder(PORT_2);
 
 void setup() {
   Serial.begin(9600);
-  pinMode(A0, INPUT); // Left IR
-  pinMode(A1, INPUT); // Right IR
-  pinMode(A2, INPUT); // High-pass filter
-  pinMode(A3, INPUT); // Band-pass filter
+  pinMode(LEFT_IR, INPUT); // Left IR
+  pinMode(RIGHT_IR, INPUT); // Right IR
+  pinMode(HIGH_PASS, INPUT); // High-pass filter
+  pinMode(BAND_PASS, INPUT); // Band-pass filter
+  baseSoundArray[0] = getAvgReading_sound(5,A2);
+  baseSoundArray[1] = getAvgReading_sound(5,A3);
 }
 
 void loop() {
   int sensorState, color, sound;
   int n;
   while(1){ // No black line encountered   
-    sensorState = lineFinder.readSensors();
-    Serial.print("sound = ");
-    Serial.print(analogRead(A1));
+    sensorState = lineFinder.readSensors(); 
+    Serial.print(analogRead(HIGH_PASS));
     Serial.print("\n");
 
     // Encountered black line
@@ -61,7 +67,7 @@ void loop() {
          else if(color == 4){
             move(4, 100);
             delay(DCTurnWait);
-            while(ultrasonic_3.distanceCm() > 7){
+            while(ultrasonic_1.distanceCm() > 7){
               avoid_obstacle();
             }
             move(4, 100);
@@ -71,7 +77,7 @@ void loop() {
          else if(color == 5){
             move(3, 100);
             delay(DCTurnWait);
-            while(ultrasonic_3.distanceCm() > 7){
+            while(ultrasonic_1.distanceCm() > 7){
               avoid_obstacle();
             }
             move(3, 100);
@@ -137,17 +143,17 @@ void move(int direction, int speed){
 }
 
 void avoid_obstacle(){
-    if(analogRead(A0) < 320){ // Left obstacle, turn right
+    if(analogRead(LEFT_IR) < 100){ // Left obstacle, turn right
       move(4, 100);
     }
-    else if(analogRead(A1) < 280){ // Right obstacle, turn left
+    else if(analogRead(RIGHT_IR) < 100){ // Right obstacle, turn left
       move(3, 100);
     }
-    else if(ultrasonic_3.distanceCm() < 7){
+    else if(ultrasonic_1.distanceCm() < 7){
       move(0, 0);
     }
     else{
-      move(1, 200);
+      move(1, 180);
     }
 }
 
@@ -175,9 +181,9 @@ void lightoff() {
 int getAvgReading(int times){      
 //find the average reading for the requested number of times of scanning LDR
   int reading;
-  int total =0;
+  int total = 0;
 //take the reading as many times as requested and add them up
-  for(int i = 0;i < times;i++){
+  for(int i = 0; i < times; i++){
      reading = analogRead(LDR);
      total = reading + total;
      delay(LDRWait);
@@ -189,13 +195,24 @@ int getAvgReading(int times){
 int getAvgReading_sound(int times, int sound){      
 //find the average reading for the requested number of times of scanning LDR
   int reading;
-  int total =0;
-//take the reading as many times as requested and add them up
-  for(int i = 0;i < times;i++){
-     reading = analogRead(sound);
+  int total = 0;
+
+  if(sound == 1){
+    for(int i = 0; i < times; i++){
+     reading = analogRead(BAND_PASS);
      total = reading + total;
      delay(LDRWait);
+    }
   }
+  else if(sound == 2){
+     for(int i = 0; i < times; i++){
+        reading = analogRead(HIGH_PASS);
+        total = reading + total;
+        delay(LDRWait);
+     }
+  }
+//take the reading as many times as requested and add them up
+  
 //calculate the average and return it
   return total/times;
 }
@@ -247,8 +264,8 @@ int colourSensor() {
 }
 
 int read_sound(){
-  soundArray[0] = getAvgReading_sound(5, A2); // Get average high pass reading
-  soundArray[1] = getAvgReading_sound(5, A3); // Get average band pass reading
+  soundArray[0] = getAvgReading_sound(5, 1) / baseSoundArray[0]; // Get average high pass reading
+  soundArray[1] = getAvgReading_sound(5, 2) / baseSoundArray[1]; // Get average band pass reading
     
   if(soundArray[0] - soundArray[1] < 1 || soundArray[1] - soundArray[0] < 1){
     return 0;
